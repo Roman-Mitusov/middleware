@@ -73,6 +73,12 @@ func (p *TcpToWSProxy) ProxyTcpToWS(ctx *fiber.Ctx) (err error) {
 			message   string
 		)
 
+		if ctx.Context().IsTLS() {
+			ctx.Response().Header.Set("Sec-WebSocket-Protocol", "https")
+		} else {
+			ctx.Response().Header.Set("Sec-WebSocket-Protocol", "http")
+		}
+
 		logger.Info("Upgrade handler working")
 		go copyTcpResponseToWebSocketConnection(clientConn, tcpConn, errClient, logger)
 
@@ -88,12 +94,6 @@ func (p *TcpToWSProxy) ProxyTcpToWS(ctx *fiber.Ctx) (err error) {
 			}
 		}
 	})
-
-	if ctx.Context().IsTLS() {
-		ctx.Response().Header.Set("Sec-WebSocket-Protocol", "https")
-	} else {
-		ctx.Response().Header.Set("Sec-WebSocket-Protocol", "http")
-	}
 
 	if err != nil {
 		logger.Errorf("tcptowsproxy: couldn't upgrade %s", err)
