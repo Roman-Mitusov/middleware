@@ -51,6 +51,10 @@ func (wsp *ReverseWSProxy) ProxyWS(ctx *fiber.Ctx) (err error) {
 		upgrader = wsp.Upgrader
 	}
 
+	upgrader.CheckOrigin = func(ctx *fasthttp.RequestCtx) bool {
+		return true
+	}
+
 	if wsp.PrepareRequest != nil {
 		if err = wsp.PrepareRequest(ctx); err != nil {
 			return err
