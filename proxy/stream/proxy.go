@@ -37,9 +37,9 @@ func (p *WSStreamReverseProxy) ProxyStream(ctx *fiber.Ctx) error {
 	}
 
 	var upgrader = DefaultWebSocketUpgrader
-	// Set Check origin to false because we don't connect to other server but copy stream directly to opened connection
+	// Set Check origin to true because we don't connect to other server but copy stream directly to opened connection
 	upgrader.CheckOrigin = func(ctx *fasthttp.RequestCtx) bool {
-		return false
+		return true
 	}
 
 	if p.Upgrader != nil {
