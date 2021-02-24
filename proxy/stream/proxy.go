@@ -1,7 +1,6 @@
 package stream
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/Roman-Mitusov/middleware/proxy"
 	"github.com/fasthttp/websocket"
@@ -88,14 +87,16 @@ func (p *WSStreamReverseProxy) ProxyStream(ctx *fiber.Ctx) error {
 // Send content of the stream response to client web socket connection
 func sendStreamResponseToClientConn(streamResponse io.ReadCloser, clientConn *websocket.Conn, errChan chan error, logger *logrus.Logger) {
 	defer streamResponse.Close()
-	buff := bytes.NewBuffer(nil)
-	if _, err := io.Copy(buff, streamResponse); err != nil {
-		logger.Errorf("Unable to copy stream response to buffer. The cause is - %v", err)
+	logger.Info("websocketstreamproxy: obtaining the writer from WebSocket client connection")
+	writer, err := clientConn.NextWriter(websocket.BinaryMessage)
+	if err != nil {
 		errChan <- err
+		logger.Errorf("websocketstreamproxy: unable to obtain writer from WebSocker client connection err=%v", err)
 	}
 
-	if err := clientConn.WriteMessage(websocket.BinaryMessage, buff.Bytes()); err != nil {
-		logger.Errorf("Unable to write stream response to client connection. The cause is - %v", err)
+	if _, err := io.Copy(writer, streamResponse); err != nil {
 		errChan <- err
+		logger.Errorf("websocketstreamproxy: error copy stream to WebSocket connection")
 	}
+
 }
